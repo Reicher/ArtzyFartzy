@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="myCanvas" width="800" height="600" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
+<script>
+
+var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+
+function Node (position, radius) {
+    this.pos = position
+	this.radius = radius
+	this.connections = Array();
+
+    this.draw = function() {
+		ctx.fillStyle = 'white'
+		ctx.beginPath();
+		ctx.arc(this.pos[0],this.pos[1],this.radius,0,2 * Math.PI);
+		ctx.fill();
+    };
+
+    this.addConnection = function( C ){
+		this.connections.push( C );
+    };
+	
+
+	this.getDistance = function( p, r ) {
+		dist = Math.sqrt(Math.pow(this.pos[0] - p[0], 2) + Math.pow(this.pos[1] - p[1], 2))
+		return dist - r - this.radius;
+	};
+};
+
+
+function Connection (Node1, Node2, strenght) {
+	this.n1 = Node1;
+	this.n2 = Node2;
+	this.strenght = strenght;
+
+	this.draw = function() {		
+		ctx.strokeStyle  = 'white'
+
+		ctx.beginPath();
+		ctx.lineWidth=this.strenght;
+        ctx.moveTo(this.n1.pos[0],this.n1.pos[1]);
+		ctx.lineTo(this.n2.pos[0],this.n2.pos[1]);
+		ctx.stroke();
+	};
+};
+
+function isFree(pos, radius){
+	extraSpace = 10;
+	for( i = 0; i < Nodes.length; i++){
+		if(Nodes[i].getDistance(pos, radius) < extraSpace)
+			return false;
+	}
+	return true;
+};
+
+function findClosest(N, inOrder){
+	orderedNodes = Nodes.slice(0);
+	orderedNodes.sort(function(a, b){return a.getDistance(N.pos, N.radius) - b.getDistance(N.pos, N.radius)});
+	return orderedNodes[inOrder]
+	};
+
+function createRandomNodes( n ){
+	w = c.width
+	h = c.height
+	
+	for( i = 0; i < n; i++){
+		do{
+			newPos = [Math.random() * w, Math.random() * h];
+			newRad = 10 + (Math.random() * 40);
+			}while(!isFree(newPos, newRad))
+			
+		Nodes.push(new Node(newPos, newRad));		
+		};
+};
+
+function createConnections( minimumConnections ) {
+
+	for( i = 0; i < Nodes.length; i++){
+		current = Nodes[i];
+		while(current.connections.length < minimumConnections) {
+			closest = findClosest(current, current.connections.length +1 );
+			C = new Connection(current, closest, 1 + Math.random() * 5)
+			current.addConnection(C);
+			closest.addConnection(C);
+			Connections.push(C);
+		}
+		
+	}
+};
+
+function update(ms){
+
+};
+
+function draw(){
+	ctx.fillStyle="black";
+	ctx.fillRect(0,0,800,600);
+	
+	for( i = 0; i < Nodes.length; i++)	
+		Nodes[i].draw();
+
+	for( i = 0; i < Connections.length; i++)	
+		Connections[i].draw();
+};
+
+// Start
+Nodes = Array();
+Connections = Array();
+createRandomNodes(5 + Math.random() * 105);
+createConnections(1 + Math.random() * 3);
+
+intervalMs = 10;
+setInterval(function(){update(intervalMs, ctx)}, intervalMs);
+setInterval(function(){draw()}, intervalMs);
+
+
+</script>
+
+</body>
+</html>
